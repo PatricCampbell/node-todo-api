@@ -41,7 +41,28 @@ app.get("/todos/:id", (req, res) => {
     return res.status(404).send();
   }
 
-  const todo = Todo.findById(id)
+  Todo.findById(id)
+    .then(todo => {
+      if (todo) {
+        res.send({ todo });
+      } else {
+        res.status(404).send();
+      }
+    })
+    .catch(err => {
+      res.status(400).send();
+    });
+});
+
+app.delete("/todos/:id", (req, res) => {
+  const id = req.params.id;
+  console.log(id);
+
+  if (!ObjectID.isValid(id)) {
+    return res.status(404).send();
+  }
+
+  Todo.findByIdAndRemove(id)
     .then(todo => {
       if (todo) {
         res.send({ todo });
