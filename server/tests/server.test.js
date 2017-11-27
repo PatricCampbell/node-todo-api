@@ -8,12 +8,12 @@ const { Todo } = require("../models/todo");
 const todos = [
   {
     _id: new ObjectID(),
-    text: "1st test todo"
+    text: "1st test todo",
   },
   {
     _id: new ObjectID(),
-    text: "2nd test todo"
-  }
+    text: "2nd test todo",
+  },
 ];
 
 beforeEach(done => {
@@ -31,7 +31,7 @@ describe("POST /todos", () => {
     request(app)
       .post("/todos")
       .send({
-        text
+        text,
       })
       .expect(200)
       .expect(res => {
@@ -103,6 +103,32 @@ describe("GET /todos/:id", () => {
   it("should return 404 for non-object ids", done => {
     request(app)
       .get(`/todos/123`)
+      .expect(404)
+      .end(done);
+  });
+});
+
+describe("DELETE /todos/:id", () => {
+  it("should remove a todo", done => {
+    request(app)
+      .delete(`/todos/${todos[0]._id.toHexString()}`)
+      .expect(200)
+      .expect(res => {
+        expect(res.body.todo.text).toBe(todos[0].text);
+      })
+      .end(done);
+  });
+
+  it("should return 404 if todo not found", done => {
+    request(app)
+      .delete(`/todos/${new ObjectID().toHexString()}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it("should return 404 for non-object ids", done => {
+    request(app)
+      .delete("/todos/123")
       .expect(404)
       .end(done);
   });
