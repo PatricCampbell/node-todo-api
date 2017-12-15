@@ -13,20 +13,20 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: validator.isEmail,
-      message: "{VALUE} is not a valid email",
-    },
+      message: "{VALUE} is not a valid email"
+    }
   },
   password: {
     type: String,
     required: true,
-    minLength: 8,
+    minLength: 8
   },
   tokens: [
     {
       access: { type: String, required: true },
-      token: { type: String, required: true },
-    },
-  ],
+      token: { type: String, required: true }
+    }
+  ]
 });
 
 UserSchema.methods.generateAuthToken = function() {
@@ -63,7 +63,27 @@ UserSchema.statics.findByToken = function(token) {
   return User.findOne({
     _id: decoded._id,
     "tokens.token": token,
-    "tokens.access": "auth",
+    "tokens.access": "auth"
+  });
+};
+
+UserSchema.statics.findByCredentials = function(email, password) {
+  const User = this;
+
+  return User.findOne({ email }).then(user => {
+    if (!user) {
+      return Promise.reject();
+    }
+
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          resolve(user);
+        } else {
+          reject();
+        }
+      });
+    });
   });
 };
 
