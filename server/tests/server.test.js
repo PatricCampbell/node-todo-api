@@ -133,7 +133,6 @@ describe("DELETE /todos/:id", () => {
 });
 
 describe("PATCH /todos/:id", () => {
-  // text changed, completed is true, completedAt is number
   it("should update the todo", done => {
     const hexId = todos[0]._id.toHexString();
 
@@ -148,7 +147,6 @@ describe("PATCH /todos/:id", () => {
       .end(done);
   });
 
-  // text changed, completed false, completedAt is null
   it("should clear completedAt when todo is not completed", done => {
     const hexId = todos[1]._id.toHexString();
 
@@ -221,11 +219,15 @@ describe("POST /users", done => {
           return done(err);
         }
 
-        User.findOne({ email }).then(user => {
-          expect(user).toExist();
-          expect(user.password).toNotBe(password);
-          done();
-        });
+        User.findOne({ email })
+          .then(user => {
+            expect(user).toExist();
+            expect(user.password).toNotBe(password);
+            done();
+          })
+          .catch(err => {
+            done(err);
+          });
       });
   });
 
@@ -241,11 +243,52 @@ describe("POST /users", done => {
   });
 
   it("should not create user if email in use", done => {
-    const email = users[0].email;
-    const password = users[0].password;
+    const { email, password } = users[0];
 
     request(app)
       .post("/users")
+      .send({ password, email })
+      .expect(400)
+      .end(done);
+  });
+});
+
+describe("POST /users/login", () => {
+  it("should login user and return auth token", done => {
+    const { email, password, _id } = users[1];
+
+    request(app)
+      .post("/users/login")
+      .send({ password, email })
+      .expect(200)
+      .expect(res => {
+        expect(res.headers["x-auth"]).toExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(_id)
+          .then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: "auth",
+              token: res.headers["x-auth"]
+            });
+            done();
+          })
+          .catch(err => {
+            done(err);
+          });
+      });
+  });
+
+  it("should reject invalid login", done => {
+    const email = "bad";
+    const password = "ugh";
+
+    request(app)
+      .post("/users/login")
       .send({ password, email })
       .expect(400)
       .end(done);
