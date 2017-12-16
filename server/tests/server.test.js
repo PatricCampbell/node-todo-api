@@ -284,12 +284,12 @@ describe("POST /users/login", () => {
   });
 
   it("should reject invalid login", done => {
-    const email = "bad";
-    const password = "ugh";
+    const badEmail = "bad";
+    const badPassword = "ugh";
 
     request(app)
       .post("/users/login")
-      .send({ password, email })
+      .send({ badPassword, badEmail })
       .expect(400)
       .end(done);
   });
